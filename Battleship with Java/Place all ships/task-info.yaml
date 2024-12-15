@@ -281,6 +281,151 @@ files:
       
       }
     learner_created: false
-feedback_link: https://hyperskill.org/projects/383/stages/2282/implement#comment
-status: Unchecked
-record: -1
+  - name: src/battleship/Ship.java
+    visible: true
+    text: |
+      package battleship;
+      
+      import java.util.ArrayList;
+      
+      public class Ship {
+      
+          private int length;
+          private ArrayList<String> partPosition;
+          private String firstPart;
+          private String lastPart;
+      
+      
+          public Ship(String firstPart, String lastPart){
+              this.firstPart = firstPart;
+              this.lastPart = lastPart;
+              this.partPosition = new ArrayList<>();
+              this.length = 0;
+              calculateLength();
+          }
+      
+          private void calculateLength(){
+      
+              int firstPartNum = getIntPart(this.firstPart);
+              int secondPartNum = getIntPart(this.lastPart);
+      
+              if(this.firstPart.substring(0,1).equals(this.lastPart.substring(0,1))){
+                  if(firstPartNum < secondPartNum){
+      
+                      for(int i = firstPartNum; i <= secondPartNum; i++) {
+                          if(i == firstPartNum){
+                              this.partPosition.add(this.firstPart);
+                          } else {
+                              this.partPosition.add(this.firstPart.substring(0,1) + i);
+                          }
+                          this.length++;
+                      }
+                  } else {
+                      for(int i = secondPartNum; i <= firstPartNum; i++) {
+      
+                          if(i == secondPartNum) {
+                              this.partPosition.add(this.lastPart);
+                          } else {
+                              this.partPosition.add(this.firstPart.substring(0,1) + i);
+                          }
+                          this.length++;
+                      }
+                  }
+              } else {
+                  char firstL = this.firstPart.charAt(0);
+                  char lastL = this.lastPart.charAt(0);
+      
+                  if( firstL < lastL){
+                      for(char i = firstL; i <= lastL; i++){
+                          this.partPosition.add(String.valueOf(i) + firstPartNum);
+                          this.length++;
+      
+                      }
+                  } else {
+                      for(char i = lastL; i <= firstL; i++){
+                          this.partPosition.add(String.valueOf(i) + firstPartNum);
+                          this.length++;
+      
+                      }
+                  }
+              }
+      
+          }
+          private Integer getIntPart(String part){
+      
+              return Integer.parseInt(part.substring(1));
+          }
+      
+          public void infoShip(){
+              System.out.println("Length: " + this.length);
+              System.out.print("Parts:");
+              for(String s : this.partPosition){
+                  System.out.print(" " + s);
+              }
+          }
+      
+      
+      }
+    learner_created: true
+  - name: src/battleship/Battlefield.java
+    visible: true
+    text: |
+      package battleship;
+      
+      import java.util.ArrayList;
+      
+      public class Battlefield {
+      
+          ArrayList<ArrayList<String>> battlefield;
+      
+      
+          public Battlefield(){
+              this.battlefield = new ArrayList<>();
+              populateBattlefield();
+          }
+      
+          private void populateBattlefield(){
+      
+              for(int i = 0; i < 11;i++){
+                  ArrayList<String> tempList = new ArrayList<>();
+                  for(int j = 0; j < 11; j++){
+                      // First Line
+                      if( i == 0 && j == 0){
+                          tempList.add(" ");
+                      } else if(i == 0) {
+                          tempList.add(String.valueOf(j));
+                      } else if( j == 0){
+                          tempList.add(String.valueOf(Character.valueOf((char) ('A' + i - 1))));
+                      } else {
+                          tempList.add("~");
+                      }
+                  }
+      
+                  this.battlefield.add(tempList);
+             //     System.out.println("ok");
+              }
+          }
+          public void printBattlefield(){
+      
+           //   System.out.println("Size " + this.battlefield.size());
+              System.out.println("Size : " + this.battlefield.get(0).size());
+      
+              for(int i = 0; i < 11;i++){
+                  for(int j = 0; j < 11; j++){
+                      System.out.print(this.battlefield.get(i).get(j));
+                      if(j != 10){
+                          System.out.print(" ");
+                      }
+                  }
+                  System.out.println("");
+              }
+          }
+      
+      }
+    learner_created: true
+feedback_link: https://hyperskill.org/learn/step/35305#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Sun, 15 Dec 2024 18:12:21 UTC"
+record: 2

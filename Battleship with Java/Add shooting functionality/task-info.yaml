@@ -450,6 +450,346 @@ files:
         }
       }
     learner_created: false
-feedback_link: https://hyperskill.org/projects/383/stages/2283/implement#comment
-status: Unchecked
-record: -1
+  - name: src/battleship/Ship.java
+    visible: true
+    text: |
+      package battleship;
+      
+      import java.util.ArrayList;
+      
+      public class Ship {
+      
+          private int length;
+          private ArrayList<String> partPosition;
+          private String firstPart;
+          private String lastPart;
+          private String name;
+      
+          public Ship(int length, String name){
+              this.name = name;
+              this.length = length;
+              this.partPosition = new ArrayList<>();
+      
+          }
+          public  Ship(String firstPart, String lastPart, String name){
+              this(firstPart,lastPart);
+              this.name = name;
+      
+          }
+          public Ship(String firstPart, String lastPart){
+              this.firstPart = firstPart;
+              this.lastPart = lastPart;
+              this.partPosition = new ArrayList<>();
+              this.length = calculateLength();
+      
+              if(this.name == null){
+                  this.name = "ship";
+              }
+          }
+      
+          public int calculateLength(){
+              int count = 0;
+              int firstPartNum = getIntPart(this.firstPart);
+              int secondPartNum = getIntPart(this.lastPart);
+      
+              if(this.firstPart.substring(0,1).equals(this.lastPart.substring(0,1))){
+                  if(firstPartNum < secondPartNum){
+      
+                      for(int i = firstPartNum; i <= secondPartNum; i++) {
+      
+                          count++;
+                      }
+                  } else {
+                      for(int i = secondPartNum; i <= firstPartNum; i++) {
+      
+      
+                          count++;
+                      }
+                  }
+              } else {
+                  char firstL = this.firstPart.charAt(0);
+                  char lastL = this.lastPart.charAt(0);
+      
+                  if( firstL < lastL){
+                      for(char i = firstL; i <= lastL; i++){
+      
+                          count++;
+      
+                      }
+                  } else {
+                      for(char i = lastL; i <= firstL; i++){
+      
+                          count++;
+      
+                      }
+                  }
+              }
+              return count;
+          }
+      
+          public void populateListPosition(){
+      
+              int firstPartNum = getIntPart(this.firstPart);
+              int secondPartNum = getIntPart(this.lastPart);
+      
+              if(this.firstPart.substring(0,1).equals(this.lastPart.substring(0,1))){
+                  if(firstPartNum < secondPartNum){
+      
+                      for(int i = firstPartNum; i <= secondPartNum; i++) {
+                          if(i == firstPartNum){
+                              this.partPosition.add(this.firstPart);
+                          } else {
+                              this.partPosition.add(this.firstPart.substring(0,1) + i);
+                          }
+      
+                      }
+                  } else {
+                      for(int i = secondPartNum; i <= firstPartNum; i++) {
+      
+                          if(i == secondPartNum) {
+                              this.partPosition.add(this.lastPart);
+                          } else {
+                              this.partPosition.add(this.firstPart.substring(0,1) + i);
+                          }
+      
+                      }
+                  }
+              } else {
+                  char firstL = this.firstPart.charAt(0);
+                  char lastL = this.lastPart.charAt(0);
+      
+                  if( firstL < lastL){
+                      for(char i = firstL; i <= lastL; i++){
+                          this.partPosition.add(String.valueOf(i) + firstPartNum);
+      
+      
+                      }
+                  } else {
+                      for(char i = lastL; i <= firstL; i++){
+                          this.partPosition.add(String.valueOf(i) + firstPartNum);
+      
+      
+                      }
+                  }
+              }
+      
+          }
+      
+      
+          private Integer getIntPart(String part){
+      
+              return Integer.parseInt(part.substring(1));
+          }
+      
+          public void infoShip(){
+              System.out.println("Length: " + this.length);
+              System.out.print("Parts:");
+              for(String s : this.partPosition){
+                  System.out.print(" " + s);
+              }
+          }
+      
+          public Integer getLength(){
+      
+              if(this.length == 0 ){
+                  this.length = calculateLength();
+              }
+              return this.length;
+          }
+      
+          public void setFirstPart(String firstPart){
+              this.firstPart = firstPart;
+          }
+      
+          public void setLastPart(String lastPart){
+              this.lastPart = lastPart;
+          }
+      
+          public String getFirstPart(){
+              return this.firstPart;
+          }
+      
+          public String getLastPart(){
+              return this.lastPart;
+          }
+      
+          public ArrayList<String> getPartPosition(){
+              return this.partPosition;
+          }
+      
+          public String getName(){
+              return this.name;
+          }
+      
+      }
+    learner_created: true
+  - name: src/battleship/Battlefield.java
+    visible: true
+    text: |
+      package battleship;
+      
+      import java.sql.SQLOutput;
+      import java.util.ArrayList;
+      
+      public class Battlefield {
+      
+          ArrayList<ArrayList<String>> battlefield;
+          ArrayList<Ship> listOShips;
+      
+      
+          public Battlefield(){
+              this.battlefield = new ArrayList<>();
+              this.listOShips = new ArrayList<>();
+              populateBattlefield();
+              populateListOfShips();
+          }
+      
+          private void populateBattlefield(){
+      
+              for(int i = 0; i < 11;i++){
+                  ArrayList<String> tempList = new ArrayList<>();
+                  for(int j = 0; j < 11; j++){
+                      // First Line
+                      if( i == 0 && j == 0){
+                          tempList.add(" ");
+                      } else if(i == 0) {
+                          tempList.add(String.valueOf(j));
+                      } else if( j == 0){
+                          tempList.add(String.valueOf(Character.valueOf((char) ('A' + i - 1))));
+                      } else {
+                          tempList.add("~");
+                      }
+                  }
+      
+                  this.battlefield.add(tempList);
+             //     System.out.println("ok");
+              }
+          }
+          public void printBattlefield(){
+      
+           //   System.out.println("Size " + this.battlefield.size());
+      
+      
+              for(int i = 0; i < 11;i++){
+                  for(int j = 0; j < 11; j++){
+                      System.out.print(this.battlefield.get(i).get(j));
+                      if(j != 10){
+                          System.out.print(" ");
+                      }
+                  }
+                  System.out.println("");
+              }
+          }
+      
+          private void populateListOfShips(){
+      
+      
+              this.listOShips.add(new Ship(5, "Aircraft Carrier"));
+              this.listOShips.add(new Ship(4, "Battleship"));
+              this.listOShips.add(new Ship(3, "Submarine"));
+      
+              this.listOShips.add(new Ship(3, "Cruiser"));
+              this.listOShips.add(new Ship(2, "Destroyer"));
+      
+      
+      
+      
+      
+          }
+      
+          public boolean placeShip(Ship ship){
+      
+      
+              // Utilisez select Row pour choisir l'array puis remplir l'array
+              // Looping in the partPosition list of the Ship Object using selectRow to be able to place the O on the right line
+      
+              // First loop to verify no cell are already occupied
+              for(String position : ship.getPartPosition()) {
+      
+      
+      
+                  if (!"~".equals(this.battlefield.get(selectRow(position.substring(0, 1))).get(Integer.parseInt(position.substring(1))))){
+                      System.out.println("Error! You placed it too close to another one. Try again:1 ");
+                      return false;
+                  }
+      
+                  int row = selectRow(position.substring(0, 1));
+                  int col = Integer.parseInt(position.substring(1,2));
+                  // test if ship is near an another one
+                  if(row - 1 >= 1){
+                      if(this.battlefield.get(row - 1).get(col).equals("O")){
+      
+                          System.out.println("Error! You placed it too close to another one. Try again:2 ");
+                          ship.getPartPosition().clear();
+                          return false;
+                      }
+                  }
+                  if(row + 1 < 11){
+                      if(this.battlefield.get(row + 1).get(col).equals("O")){
+      
+                          System.out.println("Error! You placed it too close to another one. Try again:3 ");
+                          ship.getPartPosition().clear();
+                          return false;
+                      }
+                  }
+      
+                  if(col - 1 >= 1){
+                      if(this.battlefield.get(row).get(col - 1).equals("O")){
+                          System.out.println("Error! You placed it too close to another one. Try again:4 ");
+                          ship.getPartPosition().clear();
+                          return false;
+                      }
+                  }
+      
+                  if(col + 1 < 11){
+                      if(this.battlefield.get(row).get(col + 1).equals("O")){
+                          System.out.println("Error! You placed it too close to another one. Try again: 5");
+                          ship.getPartPosition().clear();
+                          return false;
+                      }
+                  }
+      
+              }
+              // Second Loop to place
+      
+              for(String position : ship.getPartPosition()) {
+      
+                  int row = selectRow(position.substring(0, 1));
+      
+                  int col = Integer.parseInt(position.substring(1,2));
+      
+      
+                  if ("~".equals(this.battlefield.get(row).get(Integer.parseInt(position.substring(1)))))
+                      this.battlefield.get(selectRow(position.substring(0, 1))).set(Integer.parseInt(position.substring(1)), "O");
+                  else {
+                      return false;
+                  }
+              }
+      
+      
+              return true;
+      
+          }
+      
+          public int selectRow(String letter){
+      
+              String[] listLetter = {"A", "B", "C", "D", "E", "F",  "G","H", "I", "J"};
+              for(int i = 0; i < listLetter.length; i++){
+      
+                  if(letter.equals(listLetter[i])){
+                      return  i +1;
+                  }
+              }
+      
+              return 0;
+      
+          }
+      
+      }
+    learner_created: true
+feedback_link: https://hyperskill.org/learn/step/35306#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Sun, 15 Dec 2024 18:38:39 UTC"
+record: 3

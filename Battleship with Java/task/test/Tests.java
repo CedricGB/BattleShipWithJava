@@ -4,137 +4,478 @@ import org.hyperskill.hstest.stage.StageTest;
 import org.hyperskill.hstest.testcase.CheckResult;
 import org.hyperskill.hstest.testing.TestedProgram;
 
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.IntStream;
-
 
 public class Tests extends StageTest<String> {
+  @DynamicTest
+  CheckResult exampleTest() {
 
-    String[][] data = {
-            {"F3 F7", "5", "F3 F4 F5 F6 F7"},
-            {"A1 D1", "4", "A1 B1 C1 D1"},
-            {"C4 C2", "3", "C2 C3 C4"},
-            {"F4 E4", "2", "E4 F4"},
-            {"G8 G10", "3", "G8 G9 G10"}
-    };
+    TestedProgram main = new TestedProgram();
+    String output = main.start().trim();
+    String[][] matrix;
 
-    @DynamicTest(data = "data")
-    CheckResult test1(String inp, String len, String parts) {
-        TestedProgram main = new TestedProgram();
-        String output = main.start().trim();
-
-        if (!isGameFieldPrinted(output)) {
-            return CheckResult.wrong("Your program should print an empty game field at the start of the program.");
-        }
-        getFieldMatrix(output);
-        if (!output.toLowerCase().contains("ship")) {
-            return CheckResult.wrong("After starting the program, you should request " +
-                    "the coordinates of the ship in that way:\n" +
-                    "\"Enter the coordinates of the ship:\"");
-        }
-        if (!main.isWaitingInput()) {
-            return CheckResult.wrong("Your program should request the coordinates when the initial messages are " +
-                    "printed");
-        }
-        String output2 = main.execute(inp).trim().toLowerCase();
-        Matcher matcher = Pattern.compile("length:? *?(-?\\d+)").matcher(output2);
-        if (!matcher.find()) {
-            return CheckResult.wrong("When the correct coordinates were provided there should be a \"Length: \" substring in " +
-                    "your output, followed by an integer value representing the length of a ship");
-        }
-        if (!matcher.group(1).equals(len)) {
-            return CheckResult.wrong("Incorrect length of the provided ship found in your output." +
-                    (matcher.group(1).startsWith("-")
-                            ? " The order of the coordinates (start to end or end to start) does not matter" : ""));
-        }
-        for (String p : parts.toLowerCase().split(" ")) {
-            if (!output2.contains(p)) {
-                return CheckResult.wrong("When the ship correct coordinates are provided, coordinates for all " +
-                        "parts of the ship should be printed, but some of them were not found in your output");
-            }
-        }
-        Arrays.stream("ABCDEFGHIJ".split(""))
-                .flatMap(letter ->
-                        Arrays.stream(
-                                IntStream.rangeClosed(1, 10)
-                                        .mapToObj(String::valueOf)
-                                        .map(number -> letter + number)
-                                        .toArray(String[]::new)
-                        )
-                )
-                .forEach(el -> {
-                    if (!parts.contains(el) && output2.contains(el.toLowerCase())) {
-                        throw new WrongAnswer("Unexpected coordinates were found in " +
-                                "your output as ship's coordinates.");
-                    }
-                });
-
-        return CheckResult.correct();
+    if (!output.toLowerCase().contains("aircraft carrier")) {
+      return CheckResult.wrong("After starting the program, you should request " +
+              "the coordinates of the Aircraft Carrier in that way:\n" +
+              "\"Enter the coordinates of the Aircraft Carrier (5 cells):\"");
     }
 
-    String[][] incorrect = {
-            {"A3 D5", "Coordinates are not on the same line"},
-            {"F6 C2", "Coordinates are not on the same line"},
-            {"A0 A2", "Coordinates are out of bounds"},
-            {"B9 B11", "Coordinates are out of bounds"},
-            {"J5 M5", "Coordinates are out of bounds"},
-            {"L13 N18", "Coordinates are out of bounds"},
-    };
+    output = main.execute("F3 F7").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "F3 F7");
 
-    @DynamicTest(data = "incorrect")
-    CheckResult test2(String inp, String feedback) {
-        TestedProgram main = new TestedProgram();
-        main.start();
-        String output = main.execute(inp);
-        if (!output.toLowerCase().contains("error"))
-            return CheckResult.wrong(String.format("Your program should report an error if there is an input mistake." +
-                    " (%s)", feedback));
-        return CheckResult.correct();
+    if (!output.toLowerCase().contains("battleship")) {
+      return CheckResult.wrong("After asking for the Aircraft Carrier coordinates, you should request " +
+              "the coordinates of the Battleship in that way:\n" +
+              "\"Enter the coordinates of the Battleship (4 cells):\"");
     }
 
-    String[][] getFieldMatrix(String output) {
+    output = main.execute("A1 D1").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "A1 D1");
 
-        WrongAnswer cantParseException = new WrongAnswer(
-                "Can't parse the game field\n" +
-                        "Make sure you print it like in examples!");
+    if (!output.toLowerCase().contains("submarine")) {
+      return CheckResult.wrong("After asking for the Battleship coordinates, you should request " +
+              "the coordinates of the Submarine in that way:\n" +
+              "\"Enter the coordinates of the Submarine (3 cells):\"");
+    }
 
-        String[] splittedOutput = output.split("\n");
-        String[][] matrix = new String[10][10];
+    output = main.execute("J7 J10").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
 
-        try {
-            int index = 0;
-            while (!(splittedOutput[index].contains("1") &&
-                    splittedOutput[index].contains("2") &&
-                    splittedOutput[index].contains("10"))) {
-                index++;
-                if (index > 1000) {
-                    throw cantParseException;
-                }
-            }
-            index++;
+    output = main.execute("J10 J8").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "J10 J8");
 
-            for (int i = 0; i < 10; i++) {
-                String temp = splittedOutput[index].substring(2).trim();
-                if (temp.length() == 0) {
-                    throw cantParseException;
-                }
-                String[] splittedLine = temp.trim().split(" ");
-                if (splittedLine.length != 10) {
-                    throw cantParseException;
-                }
-                matrix[i] = splittedLine;
-                index++;
-            }
-        } catch (IndexOutOfBoundsException ignored) {
-            throw cantParseException;
+    if (!output.toLowerCase().contains("cruiser")) {
+      return CheckResult.wrong("After asking for the Submarine coordinates, you should request " +
+              "the coordinates of the Cruiser in that way:\n" +
+              "\"Enter the coordinates of the Cruiser (3 cells):\"");
+    }
+
+    output = main.execute("B9 D8").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
+
+    output = main.execute("B9 D9").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "B9 D9");
+
+    if (!output.toLowerCase().contains("destroyer")) {
+      return CheckResult.wrong("After asking for the Cruiser coordinates, you should request " +
+              "the coordinates of the Destroyer in that way:\n" +
+              "\"Enter the coordinates of the Destroyer (2 cells):\"");
+    }
+
+    output = main.execute("E6 D6").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake. " +
+              "(Too close to another ship)");
+    }
+
+    output = main.execute("I2 J2").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "I2 J2");
+
+    if (!output.contains("starts")) {
+      return CheckResult.wrong("After entering the coordinates of all ships you should print:\n" +
+              "\"The game starts!\"");
+    }
+
+    String[] temp = output.split("starts");
+    if (temp.length < 2) {
+      return CheckResult.wrong("After printing \"The game starts!\" you should print an empty battle field!");
+    }
+    output = temp[1];
+
+    if (!matrixIsEmpty(getFieldMatrix(output))) {
+      return CheckResult.wrong("After the game starts you should print an empty battle field!");
+    }
+
+    output = main.execute("A1");
+    if (!output.contains("hit") || !output.contains("ship")) {
+      return CheckResult.wrong("After hitting a ship you should print \"You hit a ship!\".");
+    }
+
+    matrix = getFieldMatrix(output);
+    checkShot(matrix, "A1", output);
+
+    String[] splittedOutput = output.split("ship");
+    if (splittedOutput.length < 2) {
+      return CheckResult.wrong("Two game fields were expected in the output.");
+    }
+
+    matrix = getFieldMatrix(splittedOutput[1]);
+    findAllShips(matrix, new String[]{"A1 D1", "B9 D9", "F3 F7", "I2 J2", "J8 J10"});
+
+    return CheckResult.correct();
+  }
+
+
+  @DynamicTest
+  CheckResult test1() {
+
+    TestedProgram main = new TestedProgram();
+    String output = main.start().trim();
+    String[][] matrix;
+
+    if (!output.toLowerCase().contains("aircraft carrier")) {
+      return CheckResult.wrong("After starting the program, you should request " +
+              "the coordinates of the Aircraft Carrier in that way:\n" +
+              "\"Enter the coordinates of the Aircraft Carrier (5 cells):\"");
+    }
+
+    output = main.execute("J3 J7").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "J3 J7");
+
+    if (!output.toLowerCase().contains("battleship")) {
+      return CheckResult.wrong("After asking for the Aircraft Carrier coordinates, you should request " +
+              "the coordinates of the Battleship in that way:\n" +
+              "\"Enter the coordinates of the Battleship (4 cells):\"");
+    }
+
+    output = main.execute("C8 B8");
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake. " +
+              "(Incorrect length of the ship)");
+    }
+
+    output = main.execute("C8 F8").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "C8 F8");
+
+    if (!output.toLowerCase().contains("submarine")) {
+      return CheckResult.wrong("After asking for the Battleship coordinates, you should request " +
+              "the coordinates of the Submarine in that way:\n" +
+              "\"Enter the coordinates of the Submarine (3 cells):\"");
+    }
+
+    output = main.execute("A1 C2").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
+
+    output = main.execute("A1 C1").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "A1 C1");
+
+    if (!output.toLowerCase().contains("cruiser")) {
+      return CheckResult.wrong("After asking for the Submarine coordinates, you should request " +
+              "the coordinates of the Cruiser in that way:\n" +
+              "\"Enter the coordinates of the Cruiser (3 cells):\"");
+    }
+
+    output = main.execute("H1 H3").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "H1 H3");
+
+    if (!output.toLowerCase().contains("destroyer")) {
+      return CheckResult.wrong("After asking for the Cruiser coordinates, you should request " +
+              "the coordinates of the Destroyer in that way:\n" +
+              "\"Enter the coordinates of the Destroyer (2 cells):\"");
+    }
+
+    output = main.execute("G2 E2").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake. " +
+              "(Too close to another ship)");
+    }
+
+    output = main.execute("B5 C5").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "B5 C5");
+
+    if (!output.contains("starts")) {
+      return CheckResult.wrong("After entering the coordinates of all ships you should print:\n" +
+              "\"The game starts!\"");
+    }
+
+    String[] temp = output.split("starts");
+    if (temp.length < 2) {
+      return CheckResult.wrong("After printing \"The game starts!\" you should print an empty battle field!");
+    }
+    output = temp[1];
+
+    if (!matrixIsEmpty(getFieldMatrix(output))) {
+      return CheckResult.wrong("After the game starts you should print an empty battle field!");
+    }
+
+    output = main.execute("M1");
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
+
+    output = main.execute("A11");
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
+
+    output = main.execute("E4");
+    if (!output.toLowerCase().contains("missed")) {
+      return CheckResult.wrong("After missing a ship you should print \"You missed!\".");
+    }
+
+    String[] splittedOutput = output.split("missed");
+    if (splittedOutput.length < 2) {
+      return CheckResult.wrong("Two game field were expected in the output.");
+    }
+
+    matrix = getFieldMatrix(splittedOutput[1]);
+    checkMissing(matrix, "E4", output);
+    findAllShips(matrix, new String[]{"J3 J7", "C8 F8", "A1 C1", "H1 H3", "B5 C5"});
+
+    return CheckResult.correct();
+  }
+
+
+  @DynamicTest
+  CheckResult test2() {
+
+    TestedProgram main = new TestedProgram();
+    String output = main.start().trim();
+    String[][] matrix;
+
+    if (!output.toLowerCase().contains("aircraft carrier")) {
+      return CheckResult.wrong("After starting the program, you should request " +
+              "the coordinates of the Aircraft Carrier in that way:\n" +
+              "\"Enter the coordinates of the Aircraft Carrier (5 cells):\"");
+    }
+
+    output = main.execute("J3 J7").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "J3 J7");
+
+    if (!output.toLowerCase().contains("battleship")) {
+      return CheckResult.wrong("After asking for the Aircraft Carrier coordinates, you should request " +
+              "the coordinates of the Battleship in that way:\n" +
+              "\"Enter the coordinates of the Battleship (4 cells):\"");
+    }
+
+    output = main.execute("C8 B8");
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake. " +
+              "(Incorrect length of the ship)");
+    }
+
+    output = main.execute("C8 F8").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "C8 F8");
+
+    if (!output.toLowerCase().contains("submarine")) {
+      return CheckResult.wrong("After asking for the Battleship coordinates, you should request " +
+              "the coordinates of the Submarine in that way:\n" +
+              "\"Enter the coordinates of the Submarine (3 cells):\"");
+    }
+
+    output = main.execute("A1 C2").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake.");
+    }
+
+    output = main.execute("A1 C1").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "A1 C1");
+
+    if (!output.toLowerCase().contains("cruiser")) {
+      return CheckResult.wrong("After asking for the Submarine coordinates, you should request " +
+              "the coordinates of the Cruiser in that way:\n" +
+              "\"Enter the coordinates of the Cruiser (3 cells):\"");
+    }
+
+    output = main.execute("H1 H3").trim();
+    matrix = getFieldMatrix(output);
+    findShipByCoordinates(matrix, "H1 H3");
+
+    if (!output.toLowerCase().contains("destroyer")) {
+      return CheckResult.wrong("After asking for the Cruiser coordinates, you should request " +
+              "the coordinates of the Destroyer in that way:\n" +
+              "\"Enter the coordinates of the Destroyer (2 cells):\"");
+    }
+
+    output = main.execute("G2 E2").trim();
+    if (isGameFieldPrinted(output)) {
+      return CheckResult.wrong("Your program should not print a game field if there is an input mistake. " +
+              "(Too close to another ship)");
+    }
+
+    output = main.execute("E5 F5").trim();
+    findShipByCoordinates(getFieldMatrix(output), "E5 F5");
+
+    if (!output.contains("starts")) {
+      return CheckResult.wrong("After entering the coordinates of all ships you should print:\n" +
+              "\"The game starts!\"");
+    }
+
+    output = main.execute("E8");
+    checkShot(getFieldMatrix(output), "E8", output);
+
+    if (!output.contains("hit") || !output.contains("ship")) {
+      return CheckResult.wrong("After hitting a ship you should print \"You hit a ship!\".");
+    }
+
+    String[] splittedOutput = output.split("ship");
+    if (splittedOutput.length != 2) {
+      return CheckResult.wrong("Two game field were expected in the output. No one was found");
+    }
+
+    matrix = getFieldMatrix(splittedOutput[1]);
+    findAllShips(matrix, new String[]{"J3 J7", "C8 F8", "A1 C1", "H1 H3", "E5 F5"});
+
+    return CheckResult.correct();
+  }
+
+
+  void findShipByCoordinates(String[][] matrix, String coordinates) {
+    int[] coordinatesInt = parseCoordinates(coordinates);
+
+    if (coordinatesInt[0] > coordinatesInt[2]) {
+      int swap = coordinatesInt[0];
+      coordinatesInt[0] = coordinatesInt[2];
+      coordinatesInt[2] = swap;
+    } else if (coordinatesInt[1] > coordinatesInt[3]) {
+      int swap = coordinatesInt[1];
+      coordinatesInt[1] = coordinatesInt[3];
+      coordinatesInt[3] = swap;
+    }
+
+    if (coordinatesInt[0] == coordinatesInt[2]) {
+      int cord = coordinatesInt[0];
+      for (int i = coordinatesInt[1]; i <= coordinatesInt[3]; i++) {
+        if (!matrix[cord][i].toLowerCase().equals("x") && !matrix[cord][i].toLowerCase().equals("o")) {
+          throw new WrongAnswer("The ship's cells were not found at the coordinates \"" + coordinates + "\"");
         }
+      }
+    } else {
+      int cord = coordinatesInt[1];
+      for (int i = coordinatesInt[0]; i <= coordinatesInt[2]; i++) {
+        if (!matrix[i][cord].toLowerCase().equals("x") && !matrix[i][cord].toLowerCase().equals("o")) {
+          throw new WrongAnswer("The ship's cells were not found at the \"" + coordinates + "\"");
+        }
+      }
+    }
+  }
 
-        return matrix;
+  boolean matrixIsEmpty(String[][] matrix) {
+    for (String[] strings : matrix) {
+      for (int j = 0; j < matrix.length; j++) {
+        if (!strings[j].trim().equals("~")) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  void checkShot(String[][] matrix, String coordinate, String output) {
+    int[] parsedCoordinate = new int[2];
+    parsedCoordinate[0] = charToInt(coordinate.toLowerCase().substring(0, 1));
+    parsedCoordinate[1] = Integer.parseInt(coordinate.substring(1)) - 1;
+
+    if (!output.toLowerCase().contains("hit")) {
+      throw new WrongAnswer(
+              "Your program reacted unpredictably to a hit.\n" +
+                      "You should print \"You hit a ship!\".");
     }
 
-    boolean isGameFieldPrinted(String output) {
-        return output.contains("1") && output.contains("2") && output.contains("10");
+    if (output.toLowerCase().contains("missed")) {
+      throw new WrongAnswer("Seems like your program prints " +
+              "both \"hit\" and \"missed\".\n" +
+              "You should print only \"You hit a ship!\".");
     }
+
+    if (!matrix[parsedCoordinate[0]][parsedCoordinate[1]].toLowerCase().contains("x")) {
+      throw new WrongAnswer("You should print \"X\" in " +
+              " coordinates where you hit the ship.");
+    }
+  }
+
+  void checkMissing(String[][] matrix, String coordinate, String output) {
+    int[] parsedCoordinate = new int[2];
+    parsedCoordinate[0] = charToInt(coordinate.toLowerCase().substring(0, 1));
+    parsedCoordinate[1] = Integer.parseInt(coordinate.substring(1)) - 1;
+
+    if (!output.toLowerCase().contains("missed")) {
+      throw new WrongAnswer(
+              "Your program reacted unpredictably to a miss.\n" +
+                      "You should print \"You missed!\".");
+    }
+
+    if (output.toLowerCase().contains("hit")) {
+      throw new WrongAnswer("Seems like your program prints " +
+              "both \"hit\" and \"missed\".\n" +
+              "You should print only \"You missed!\".");
+    }
+
+    if (!matrix[parsedCoordinate[0]][parsedCoordinate[1]].toLowerCase().contains("m")) {
+      throw new WrongAnswer("You should print \"M\" in " +
+              " coordinates where you missed.");
+    }
+  }
+
+  int[] parseCoordinates(String coordinatesString) {
+    String[] splittedCoords = coordinatesString.split(" ");
+    int[] parsedCoordinates = new int[4];
+
+    parsedCoordinates[0] = charToInt(splittedCoords[0].substring(0, 1));
+    parsedCoordinates[1] = Integer.parseInt(splittedCoords[0].substring(1)) - 1;
+    parsedCoordinates[2] = charToInt(splittedCoords[1].substring(0, 1));
+    parsedCoordinates[3] = Integer.parseInt(splittedCoords[1].substring(1)) - 1;
+
+    return parsedCoordinates;
+  }
+
+  int charToInt(String charCoordinate) {
+    charCoordinate = charCoordinate.toLowerCase();
+    char character = charCoordinate.charAt(0);
+    return (int) character - (int) 'a';
+  }
+
+  String[][] getFieldMatrix(String output) {
+
+    WrongAnswer cantParseException = new WrongAnswer("Can't parse the game field\n" +
+            "Make sure you print it like in examples!");
+
+    String[] splittedOutput = output.split("\n");
+    String[][] matrix = new String[10][10];
+
+    try {
+      int index = 0;
+      while (!(splittedOutput[index].contains("1") &&
+              splittedOutput[index].contains("2") &&
+              splittedOutput[index].contains("10"))) {
+        index++;
+        if (index > 1000) {
+          throw cantParseException;
+        }
+      }
+      index++;
+
+      for (int i = 0; i < 10; i++) {
+        String temp = splittedOutput[index].substring(2).trim();
+        String[] splittedLine = temp.trim().split(" ");
+        if (splittedLine.length != 10) {
+          throw cantParseException;
+        }
+        matrix[i] = splittedLine;
+        index++;
+      }
+    } catch (IndexOutOfBoundsException ignored) {
+      throw cantParseException;
+    }
+
+    return matrix;
+  }
+
+  boolean isGameFieldPrinted(String output) {
+    return output.contains("1") && output.contains("2") && output.contains("10");
+  }
+
+  void findAllShips(String[][] matrix, String[] coordinates) {
+    for (String item : coordinates) {
+      findShipByCoordinates(matrix, item);
+    }
+  }
 }

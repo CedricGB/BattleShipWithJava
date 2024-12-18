@@ -49,6 +49,7 @@ public class Player {
 
                     if(this.battlefield.placeShip(this.battlefield.listOShips.get(i))){
                         this.battlefield.printBattlefield();
+
                         i++;
                     }
 
@@ -61,6 +62,4 @@ public class Player {
             }
         }
     }
-
-
 }

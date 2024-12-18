@@ -13,14 +13,16 @@ public class Main {
         Player player2 = new Player();
 
         System.out.println("Player 1, place your ships on the game field");
+        player1.getBattlefield().printBattlefield();
         player1.playerPlaceShip();
 
         Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
+        String input = "";
 
         pleasePressEnter(scanner, input);
 
         System.out.println("Player 2, place your ships on the game field");
+        player2.getBattlefield().printBattlefield();
         player2.playerPlaceShip();
 
         boolean playerTurn = true;
@@ -50,6 +52,7 @@ public class Main {
                     break;
                 }
             }
+            pleasePressEnter(scanner, input);
         }
     }
 
@@ -75,17 +78,12 @@ public class Main {
             } else {
                 playerGettingShot.getBattlefield().handleMissHit(input);
                 System.out.println("You missed!\n");
-
             }
-            playerGettingShot.getBattlefield().printFogOfWar();
-            System.out.println("");
         } else {
             System.out.println("Error! You entered the wrong coordinates! Try again:\n");
             return timeToShoot(playerGettingShot);
         }
-
         return true;
-
     }
 
     public static void pleasePressEnter(Scanner scanner, String input){
@@ -94,13 +92,5 @@ public class Main {
             System.out.println("Press Enter and pass the move to another player");
             input = scanner.nextLine();
         } while(!"".equals(input));
-
     }
-
-
-
 }
-
-
-
-

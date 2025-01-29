@@ -151,12 +151,13 @@ public class Battlefield {
             if ("~".equals(this.battlefield.get(row).get(col))) {
 
                 this.battlefield.get(selectRow(position.substring(0, 1))).set(col, "O");
-                this.nbOfShip++;
+
             }else {
                 return false;
             }
-        }
 
+        }
+        this.nbOfShip++;
         return true;
 
     }
@@ -177,20 +178,56 @@ public class Battlefield {
 
     public boolean hitAShip(String hit){
 
+        for(Ship ship : this.listOShips){
+
+            if(ship.getPartPosition().contains(hit)){
+
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    public void handleHitShip(String hit){
+
         int row = selectRow(hit.substring(0, 1));
         int col = Integer.parseInt(hit.substring(1));
 
-        if(this.battlefield.get(row).get(col).equals("O")){
+        for(Ship ship : this.listOShips){
 
+            if(ship.getPartPosition().contains(hit)){
 
-            this.fogOfWar.get(row).set(col, "X");
-            printFogOfWar();
-            return true;
-        } else {
-            this.fogOfWar.get(row).set(col, "M");
-            printFogOfWar();
+                ship.lifeHit();
+                this.fogOfWar.get(row).set(col, "X");
+                this.battlefield.get(row).set(col,"X");
+
+                if(ship.getLife() == 0 ){
+                    this.nbOfShip--;
+                } else{
+                    System.out.println("You hit a ship!\n");
+
+                }
+                return;
+
+            }
         }
-        return false;
+
+
+    }
+
+    public void handleMissHit(String hit){
+
+        int row = selectRow(hit.substring(0, 1));
+        int col = Integer.parseInt(hit.substring(1));
+
+        this.fogOfWar.get(row).set(col, "M");
+        this.battlefield.get(row).set(col, "M");
+        printFogOfWar();
+    }
+
+    public int getNbOfShip(){
+        return this.nbOfShip;
     }
 
 }

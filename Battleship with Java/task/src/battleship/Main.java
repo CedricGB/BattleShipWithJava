@@ -1,5 +1,6 @@
 package battleship;
 
+import javax.swing.*;
 import java.sql.SQLOutput;
 import java.util.Objects;
 import java.util.Scanner;
@@ -7,87 +8,91 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        Battlefield battlefield = new Battlefield();
-        battlefield.printBattlefield();
 
+        Player player1 = new Player();
+        Player player2 = new Player();
 
-        for(int i = 0 ; i < battlefield.listOShips.size()  ; ){
+        System.out.println("Player 1, place your ships on the game field");
+        player1.getBattlefield().printBattlefield();
+        player1.playerPlaceShip();
 
-            System.out.println("Enter the coordinates of " + battlefield.listOShips.get(i).getName() + " (" + battlefield.listOShips.get(i).getLength() +" cells)" );
-            Scanner scanner = new Scanner(System.in);
-            String input = scanner.nextLine();
-            String[] listInput = input.split(" ");
+        Scanner scanner = new Scanner(System.in);
+        String input = "";
 
-            if(listInput.length == 2
-                    && listInput[0].matches("[ABCDEFGHIJ0-9]+")
-                    && listInput[1].matches("[ABCDEFGHIJ0-9]+")
-                    && (listInput[0].length() == 2 || listInput[0].length() == 3)
-                    && (listInput[1].length() == 2 || listInput[1].length() == 3)
-                    && Integer.parseInt(listInput[0].substring(1)) < 11
-                    && Integer.parseInt(listInput[0].substring(1)) > 0
-                    && Integer.parseInt(listInput[1].substring(1)) < 11
-                    && Integer.parseInt(listInput[1].substring(1)) > 0
-                    && (!listInput[0].substring(0,1).equals(listInput[1].substring(0,1))
-                    && Integer.parseInt(listInput[0].substring(1)) == Integer.parseInt(listInput[1].substring(1))
-                    || (listInput[0].substring(0,1).equals(listInput[1].substring(0,1))
-                    && Integer.parseInt(listInput[0].substring(1)) != Integer.parseInt(listInput[1].substring(1))))){
+        pleasePressEnter(scanner, input);
 
+        System.out.println("Player 2, place your ships on the game field");
+        player2.getBattlefield().printBattlefield();
+        player2.playerPlaceShip();
 
-                battlefield.listOShips.get(i).setFirstPart(listInput[0]);
-                battlefield.listOShips.get(i).setLastPart(listInput[1]);
+        boolean playerTurn = true;
+        pleasePressEnter(scanner, input);
 
-
-
-                if(battlefield.listOShips.get(i).getLength() == battlefield.listOShips.get(i).calculateLength()){
-
-                        battlefield.listOShips.get(i).populateListPosition();
-
-                    if(battlefield.placeShip(battlefield.listOShips.get(i))){
-                        battlefield.printBattlefield();
-                        i++;
-                    }
-
-                } else {
-                    System.out.println("Error ! Wrong length of the " + battlefield.listOShips.get(i).getName() + "! Try again");
-
-                }
-            } else  {
-                System.out.println("Error");
-            }
-        }
-
-        System.out.println("The game starts!\n");
-        battlefield.printFogOfWar();
         while(true){
 
-            System.out.println("Take a shot!");
+            if(playerTurn){
+                System.out.println("Player 1, it's your turn:\n");
+                player2.getBattlefield().printFogOfWar();
+                System.out.println("---------------------");
+                player1.getBattlefield().printBattlefield();
+                playerTurn = !timeToShoot(player2);
 
-            Scanner scanner = new Scanner(System.in);
-
-            String input = scanner.nextLine();
-
-            if(input.matches("[ABCDEFGHIJ0-9]+")
-                && Integer.parseInt(input.substring(1)) >= 1
-                && Integer.parseInt(input.substring(1)) <= 10 ){
-                if(battlefield.hitAShip(input)){
-                    System.out.println("You hit a ship!\n");
-                    battlefield.printBattlefield();
-                } else {
-                    System.out.println("You missed!\n");
+                if(player2.getBattlefield().getNbOfShip() == 0){
+                    System.out.println("Player 1 win");
+                    break;
                 }
             } else {
-                System.out.println("Error! You entered the wrong coordinates! Try again:\n");
-                continue;
+                System.out.println("Player 2, it's your turn:\n");
+                player1.getBattlefield().printFogOfWar();
+                System.out.println("---------------------");
+                player2.getBattlefield().printBattlefield();
+                playerTurn = timeToShoot(player1);
+                if(player1.getBattlefield().getNbOfShip() == 0){
+                    System.out.println("Player 2 win");
+                    break;
+                }
             }
-
-            break;
-
+            pleasePressEnter(scanner, input);
         }
-
     }
 
+    public static boolean timeToShoot( Player playerGettingShot){
 
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
 
+        if(input.matches("[ABCDEFGHIJ0-9]+")
+                && Integer.parseInt(input.substring(1)) >= 1
+                && Integer.parseInt(input.substring(1)) <= 10 ){
+            if(playerGettingShot.getBattlefield().hitAShip(input)){
+                playerGettingShot.getBattlefield().handleHitShip(input);
+                System.out.println(playerGettingShot.getBattlefield().getNbOfShip());
+                if(playerGettingShot.getBattlefield().getNbOfShip() == 0){
+                    System.out.println("You sank the last ship. You won. Congratulations!\n");
+                    playerGettingShot.getBattlefield().printBattlefield();
+
+                } else {
+                    System.out.println("You sank a ship! Specify a new target:\n");
+                }
+
+            } else {
+                playerGettingShot.getBattlefield().handleMissHit(input);
+                System.out.println("You missed!\n");
+            }
+        } else {
+            System.out.println("Error! You entered the wrong coordinates! Try again:\n");
+            return timeToShoot(playerGettingShot);
+        }
+        return true;
+    }
+
+    public static void pleasePressEnter(Scanner scanner, String input){
+
+        do {
+            System.out.println("Press Enter and pass the move to another player");
+            input = scanner.nextLine();
+        } while(!"".equals(input));
+    }
 }
 
 

@@ -9,11 +9,14 @@ public class Ship {
     private String firstPart;
     private String lastPart;
     private String name;
+    private int life;
+
 
     public Ship(int length, String name){
         this.name = name;
         this.length = length;
         this.partPosition = new ArrayList<>();
+        this.life = length;
 
     }
     public  Ship(String firstPart, String lastPart, String name){
@@ -164,6 +167,14 @@ public class Ship {
 
     public String getName(){
         return this.name;
+    }
+
+    public void lifeHit(){
+        this.life--;
+    }
+
+    public int getLife(){
+        return this.life;
     }
 
 }
